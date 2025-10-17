@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.loiev.geonot.ui.screens.NotesListScreen
 import com.loiev.geonot.ui.theme.GeonotTheme
 
 class MainActivity : ComponentActivity() {
@@ -21,9 +22,8 @@ class MainActivity : ComponentActivity() {
             GeonotTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
                 ) {
-                    WelcomeScreen()
+                    NotesListScreen()
                 }
             }
         }

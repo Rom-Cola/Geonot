@@ -8,20 +8,19 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.loiev.geonot.data.GeoNote
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.loiev.geonot.ui.components.GeoNoteCard
-import com.loiev.geonot.ui.theme.GeonotTheme
+import com.loiev.geonot.ui.viewmodels.NotesViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NotesListScreen() {
-    val notes = listOf(
-        GeoNote(1, "КПІ", "KPI is my favourite place <3", latitude = 0.0, longitude = 0.0, radius = 50, timestamp = "5 min ago"),
-        GeoNote(2, "Пузата Хата", "Їжа смачна", latitude = 0.0, longitude = 0.0, radius = 100, timestamp = "11.02.2024")
-    )
+fun NotesListScreen(viewModel: NotesViewModel = viewModel()) {
+    val notes by viewModel.notes.collectAsState()
+
     Scaffold(topBar = { TopAppBar(title = { Text("All Markers") }) }) { paddingValues ->
         LazyColumn(modifier = Modifier.padding(paddingValues)) {
             items(notes) { note ->

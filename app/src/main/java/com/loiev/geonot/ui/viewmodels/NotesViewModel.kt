@@ -1,23 +1,39 @@
 package com.loiev.geonot.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.loiev.geonot.data.GeoNote
-import kotlinx.coroutines.flow.MutableStateFlow
+import com.loiev.geonot.data.GeoNoteRepository
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
-class NotesViewModel : ViewModel() {
-    private val _notes = MutableStateFlow<List<GeoNote>>(emptyList())
-    val notes: StateFlow<List<GeoNote>> = _notes.asStateFlow()
-
-    init {
-        loadNotes()
-    }
-
-    private fun loadNotes() {
-        _notes.value = listOf(
-            GeoNote(1, "КПІ", "KPI is my favourite place <3", latitude = 0.0, longitude = 0.0, radius = 50, timestamp = "5 min ago"),
-            GeoNote(2, "Пузата Хата", "Їжа смачна", latitude = 0.0, longitude = 0.0, radius = 100, timestamp = "11.02.2024")
+class NotesViewModel(private val repository: GeoNoteRepository) : ViewModel() {
+    val notes: StateFlow<List<GeoNote>> = repository.allNotes
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000L),
+            initialValue = emptyList()
         )
+
+    fun addNote(name: String, text: String, radius: Int) { // <-- Додали параметр radius
+        viewModelScope.launch {
+            val sdf = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
+            val currentDate = sdf.format(Date())
+
+            val newNote = GeoNote(
+                name = name,
+                text = text,
+                radius = radius,
+                latitude = 50.4501,
+                longitude = 30.5234,
+                timestamp = currentDate
+            )
+            repository.insert(newNote)
+        }
     }
 }

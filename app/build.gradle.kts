@@ -1,4 +1,5 @@
 plugins {
+    id("com.google.devtools.ksp") version "2.0.21-1.0.27"
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
@@ -40,7 +41,13 @@ android {
 }
 
 dependencies {
+    // --- Room Database ---
+    val room_version = "2.6.1"
+    implementation("androidx.room:room-runtime:$room_version")
+    implementation("androidx.room:room-ktx:$room_version")
+    ksp("androidx.room:room-compiler:$room_version") // ТІЛЬКИ ksp для компілятора
 
+    // --- Core Android & Jetpack Compose ---
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -49,8 +56,13 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
-    implementation("androidx.navigation:navigation-compose:2.9.5")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.4")
+
+    // --- Navigation & ViewModel ---
+    // Рекомендую перевірити останні СТАБІЛЬНІ версії
+    implementation("androidx.navigation:navigation-compose:2.7.7")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+
+    // --- Testing ---
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

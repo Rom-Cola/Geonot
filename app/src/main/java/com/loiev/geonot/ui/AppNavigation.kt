@@ -13,13 +13,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.loiev.geonot.GeonotApplication
+import com.loiev.geonot.ui.screens.AddNoteScreen
 import com.loiev.geonot.ui.screens.NotesListScreen
+import com.loiev.geonot.ui.viewmodels.NotesViewModel
+import com.loiev.geonot.ui.viewmodels.ViewModelFactory
 
 sealed class Screen(val route: String, val icon: ImageVector, val title: String) {
     object Map : Screen("map", Icons.Default.Home, "Map")
@@ -40,10 +46,17 @@ fun MainScreen() {
 
 @Composable
 fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) {
+    // Створюємо ViewModel один раз для всього графу навігації
+    val application = LocalContext.current.applicationContext as GeonotApplication
+    val notesViewModel: NotesViewModel = viewModel(
+        factory = ViewModelFactory(application.repository)
+    )
+
     NavHost(navController = navController, startDestination = Screen.Map.route, modifier = modifier) {
         composable(Screen.Map.route) { PlaceholderScreen("Map Screen") }
-        composable(Screen.NotesList.route) { NotesListScreen() }
-        composable(Screen.AddNote.route) { PlaceholderScreen("Add Note Screen") }
+        composable(Screen.NotesList.route) { NotesListScreen(viewModel = notesViewModel) }
+        // Передаємо viewModel та navController в екран додавання
+        composable(Screen.AddNote.route) { AddNoteScreen(navController = navController, viewModel = notesViewModel) }
         composable(Screen.Profile.route) { PlaceholderScreen("Profile Screen") }
     }
 }

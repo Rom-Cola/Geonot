@@ -18,7 +18,7 @@ import com.loiev.geonot.ui.viewmodels.NotesViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NotesListScreen(viewModel: NotesViewModel = viewModel()) {
+fun NotesListScreen(viewModel: NotesViewModel) {
     val notes by viewModel.notes.collectAsState()
 
     Scaffold(topBar = { TopAppBar(title = { Text("All Markers") }) }) { paddingValues ->

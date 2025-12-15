@@ -2,16 +2,15 @@ package com.loiev.geonot
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.loiev.geonot.ui.MainScreen
@@ -39,22 +38,27 @@ class MainActivity : ComponentActivity() {
                         }
                     )
 
-                    when (authState) {
+                    when (val state = authState) {
                         is AuthState.Authenticated -> {
-                            MainScreen() // Показуємо головний екран
+                            MainScreen()
                         }
                         is AuthState.Unauthenticated, is AuthState.Error -> {
-                            LoginScreen(onGoogleSignInClicked = {
-                                val signInIntent = authViewModel.getGoogleSignInIntent()
-                                googleSignInLauncher.launch(signInIntent)
-                            })
+                            LoginScreen(
+                                onGoogleSignInClicked = {
+                                    authViewModel.clearError()
+                                    googleSignInLauncher.launch(authViewModel.getGoogleSignInIntent())
+                                },
+                                onEmailSignInClicked = { email, password ->
+                                    authViewModel.signInWithEmail(email, password)
+                                },
+                                onEmailSignUpClicked = { login, email, password ->
+                                    authViewModel.signUpWithEmail(login, email, password)
+                                },
+                                errorMessage = if (state is AuthState.Error) state.message else null
+                            )
                         }
                         is AuthState.Loading -> {
-                            // Показуємо індикатор завантаження
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                                 CircularProgressIndicator()
                             }
                         }

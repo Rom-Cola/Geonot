@@ -28,6 +28,7 @@ import com.loiev.geonot.ui.screens.AddNoteScreen
 import com.loiev.geonot.ui.screens.MapScreen
 import com.loiev.geonot.ui.screens.NotesListScreen
 import com.loiev.geonot.ui.screens.ProfileScreen
+import com.loiev.geonot.ui.viewmodels.AuthViewModel
 import com.loiev.geonot.ui.viewmodels.NotesViewModel
 import com.loiev.geonot.ui.viewmodels.ViewModelFactory
 
@@ -52,18 +53,16 @@ fun MainScreen() {
 
 @Composable
 fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) {
-    // Створюємо ViewModel один раз для всього графу навігації
     val application = LocalContext.current.applicationContext as GeonotApplication
     val notesViewModel: NotesViewModel = viewModel(
         factory = ViewModelFactory(application.repository)
     )
-
+    val authViewModel: AuthViewModel = viewModel()
     NavHost(navController = navController, startDestination = Screen.Map.route, modifier = modifier) {
         composable(Screen.Map.route) {
             MapScreen(viewModel = notesViewModel, navController = navController)
         }
         composable(Screen.NotesList.route) { NotesListScreen(viewModel = notesViewModel) }
-        // Передаємо viewModel та navController в екран додавання
         composable(
             route = Screen.AddNote.route,
             arguments = listOf(
@@ -77,11 +76,9 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
                 }
             )
         ) { backStackEntry ->
-            // Витягуємо аргументи
             val lat = backStackEntry.arguments?.getFloat("lat")?.toDouble() ?: 0.0
             val lng = backStackEntry.arguments?.getFloat("lng")?.toDouble() ?: 0.0
 
-            // Передаємо їх в AddNoteScreen
             AddNoteScreen(
                 navController = navController,
                 viewModel = notesViewModel,
@@ -89,7 +86,12 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
                 longitude = lng
             )
         }
-        composable(Screen.Profile.route) { ProfileScreen(viewModel = notesViewModel) }
+        composable(Screen.Profile.route) {
+            ProfileScreen(
+                notesViewModel = notesViewModel,
+                authViewModel = authViewModel
+            )
+        }
     }
 }
 

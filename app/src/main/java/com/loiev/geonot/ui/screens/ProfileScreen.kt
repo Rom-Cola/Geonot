@@ -3,24 +3,33 @@ package com.loiev.geonot.ui.screens
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.loiev.geonot.ui.viewmodels.AuthViewModel
 import com.loiev.geonot.ui.viewmodels.NotesViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileScreen(viewModel: NotesViewModel) {
-    val totalNotes by viewModel.totalNotesCount.collectAsState()
-    val statsData by viewModel.statsData.collectAsState()
+fun ProfileScreen(
+    notesViewModel: NotesViewModel,
+    authViewModel: AuthViewModel
+) {
+    val totalNotes by notesViewModel.totalNotesCount.collectAsState()
+    val statsData by notesViewModel.statsData.collectAsState()
+
+    val userEmail = authViewModel.userEmail ?: "No email"
+    val userDisplayName = authViewModel.userDisplayName ?: ""
+
+    var firstName by remember { mutableStateOf(userDisplayName.substringBefore(" ")) }
+    var lastName by remember { mutableStateOf(userDisplayName.substringAfter(" ", "")) }
 
     Column(
         modifier = Modifier
@@ -28,27 +37,76 @@ fun ProfileScreen(viewModel: NotesViewModel) {
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Statistics", style = MaterialTheme.typography.headlineMedium)
+        Text(
+            "Profile & Stats",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold
+        )
         Spacer(modifier = Modifier.height(24.dp))
 
-        // KPI-індикатор
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text("Total notes created", style = MaterialTheme.typography.titleMedium)
-                Text(
-                    text = totalNotes.toString(),
-                    style = MaterialTheme.typography.displayMedium,
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                )
-            }
+        OutlinedTextField(
+            value = userEmail,
+            onValueChange = {},
+            label = { Text("Email") },
+            readOnly = true,
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(modifier = Modifier.fillMaxWidth()) {
+            OutlinedTextField(
+                value = firstName,
+                onValueChange = { firstName = it },
+                label = { Text("First Name") },
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            OutlinedTextField(
+                value = lastName,
+                onValueChange = { lastName = it },
+                label = { Text("Last Name") },
+                modifier = Modifier.weight(1f)
+            )
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = {
+                val newDisplayName = "$firstName $lastName".trim()
+                authViewModel.updateProfile(newDisplayName)
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Save Profile")
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Divider(modifier = Modifier.padding(vertical = 24.dp))
 
-        // Графік
-        Text("Activity in last 7 days", style = MaterialTheme.typography.titleMedium)
+        Text("Statistics", style = MaterialTheme.typography.headlineSmall)
         Spacer(modifier = Modifier.height(16.dp))
+
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text("Total notes created", style = MaterialTheme.typography.titleMedium)
+                Text(text = totalNotes.toString(), style = MaterialTheme.typography.displayMedium)
+            }
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text("Activity in last 7 days", style = MaterialTheme.typography.titleMedium)
         BarChart(data = statsData)
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        OutlinedButton(
+            onClick = { authViewModel.signOut() },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Sign Out")
+        }
     }
 }
 
@@ -76,14 +134,12 @@ fun BarChart(data: Map<String, Int>) {
         data.forEach { (day, count) ->
             val barHeight = (count.toFloat() / maxVal) * size.height
 
-            // Малюємо стовпець
             drawRect(
                 color = Color(0xFFBB86FC),
                 topLeft = Offset(x = currentX - barWidth / 2, y = size.height - barHeight),
                 size = androidx.compose.ui.geometry.Size(width = barWidth, height = barHeight)
             )
 
-            // Малюємо підпис дня тижня
             drawContext.canvas.nativeCanvas.drawText(
                 day,
                 currentX,

@@ -12,7 +12,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.loiev.geonot.ui.components.GeoNoteCard
 import com.loiev.geonot.ui.viewmodels.NotesViewModel
 

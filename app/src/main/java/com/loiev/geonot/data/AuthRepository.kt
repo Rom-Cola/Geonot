@@ -8,6 +8,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.auth.userProfileChangeRequest
 import com.google.firebase.ktx.Firebase
 import com.loiev.geonot.R
 import kotlinx.coroutines.tasks.await
@@ -36,6 +37,28 @@ class AuthRepository(private val context: Context) {
     suspend fun signOut() {
         auth.signOut()
         googleSignInClient.signOut().await()
+    }
+
+    suspend fun firebaseSignUpWithEmail(email: String, password: String): AuthResult {
+        return auth.createUserWithEmailAndPassword(email, password).await()
+    }
+
+    suspend fun firebaseSignInWithEmail(email: String, password: String): AuthResult {
+        return auth.signInWithEmailAndPassword(email, password).await()
+    }
+    fun getUserEmail(): String? {
+        return auth.currentUser?.email
+    }
+
+    fun getUserDisplayName(): String? {
+        return auth.currentUser?.displayName
+    }
+
+    suspend fun updateUserProfile(displayName: String) {
+        val profileUpdates = userProfileChangeRequest {
+            this.displayName = displayName
+        }
+        auth.currentUser?.updateProfile(profileUpdates)?.await()
     }
 
     fun getCurrentUser() = auth.currentUser

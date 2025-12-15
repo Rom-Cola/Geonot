@@ -27,6 +27,22 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         checkCurrentUser()
     }
 
+    val userEmail: String?
+        get() = repository.getUserEmail()
+
+    val userDisplayName: String?
+        get() = repository.getUserDisplayName()
+
+    fun updateProfile(displayName: String) {
+        viewModelScope.launch {
+            try {
+                repository.updateUserProfile(displayName)
+            } catch (e: Exception) {
+                
+            }
+        }
+    }
+
     private fun checkCurrentUser() {
         val user = repository.getCurrentUser()
         _authState.value = if (user != null) AuthState.Authenticated else AuthState.Unauthenticated
@@ -45,6 +61,37 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             } catch (e: Exception) {
                 _authState.value = AuthState.Error(e.message ?: "An unknown error occurred")
             }
+        }
+    }
+
+    fun signUpWithEmail(login: String, email: String, password: String) {
+        viewModelScope.launch {
+            _authState.value = AuthState.Loading
+            try {
+                // TODO: Додати валідацію полів
+                repository.firebaseSignUpWithEmail(email, password)
+                _authState.value = AuthState.Authenticated
+            } catch (e: Exception) {
+                _authState.value = AuthState.Error(e.message ?: "Sign up failed")
+            }
+        }
+    }
+
+    fun signInWithEmail(email: String, password: String) {
+        viewModelScope.launch {
+            _authState.value = AuthState.Loading
+            try {
+                repository.firebaseSignInWithEmail(email, password)
+                _authState.value = AuthState.Authenticated
+            } catch (e: Exception) {
+                _authState.value = AuthState.Error(e.message ?: "Sign in failed")
+            }
+        }
+    }
+
+    fun clearError() {
+        if (_authState.value is AuthState.Error) {
+            _authState.value = AuthState.Unauthenticated
         }
     }
 

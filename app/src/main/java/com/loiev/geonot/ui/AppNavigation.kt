@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -25,10 +26,12 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.loiev.geonot.GeonotApplication
 import com.loiev.geonot.ui.screens.AddNoteScreen
+import com.loiev.geonot.ui.screens.EditNoteScreen
 import com.loiev.geonot.ui.screens.MapScreen
 import com.loiev.geonot.ui.screens.NotesListScreen
 import com.loiev.geonot.ui.screens.ProfileScreen
 import com.loiev.geonot.ui.viewmodels.AuthViewModel
+import com.loiev.geonot.ui.viewmodels.MapViewModel
 import com.loiev.geonot.ui.viewmodels.NotesViewModel
 import com.loiev.geonot.ui.viewmodels.ViewModelFactory
 
@@ -37,6 +40,10 @@ sealed class Screen(val route: String, val icon: ImageVector, val title: String)
     object NotesList : Screen("notes_list", Icons.AutoMirrored.Filled.List, "Markers")
     object AddNote : Screen("add_note?lat={lat}&lng={lng}", Icons.Default.Add, "Add") {
         fun createRoute(lat: Double, lng: Double) = "add_note?lat=$lat&lng=$lng"
+    }
+
+    object EditNote : Screen("edit_note/{noteId}", Icons.Default.Edit, "Edit") {
+        fun createRoute(noteId: Int) = "edit_note/$noteId"
     }
     object Profile : Screen("profile", Icons.Default.Person, "Profile")
 }
@@ -58,11 +65,14 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
         factory = ViewModelFactory(application.repository)
     )
     val authViewModel: AuthViewModel = viewModel()
+
+    val mapViewModel: MapViewModel = viewModel()
+
     NavHost(navController = navController, startDestination = Screen.Map.route, modifier = modifier) {
         composable(Screen.Map.route) {
-            MapScreen(viewModel = notesViewModel, navController = navController)
+            MapScreen(viewModel = notesViewModel, navController = navController, mapViewModel = mapViewModel)
         }
-        composable(Screen.NotesList.route) { NotesListScreen(viewModel = notesViewModel) }
+        composable(Screen.NotesList.route) { NotesListScreen(viewModel = notesViewModel, navController = navController, mapViewModel = mapViewModel) }
         composable(
             route = Screen.AddNote.route,
             arguments = listOf(
@@ -84,6 +94,17 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
                 viewModel = notesViewModel,
                 latitude = lat,
                 longitude = lng
+            )
+        }
+        composable(
+            route = Screen.EditNote.route,
+            arguments = listOf(navArgument("noteId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val noteId = backStackEntry.arguments?.getInt("noteId") ?: -1
+            EditNoteScreen(
+                noteId = noteId,
+                navController = navController,
+                viewModel = notesViewModel
             )
         }
         composable(Screen.Profile.route) {

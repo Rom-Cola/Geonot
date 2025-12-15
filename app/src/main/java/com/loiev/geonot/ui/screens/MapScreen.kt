@@ -19,13 +19,14 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
 import com.loiev.geonot.ui.Screen
+import com.loiev.geonot.ui.viewmodels.MapViewModel
 import com.loiev.geonot.ui.viewmodels.NotesViewModel
 import com.loiev.geonot.utils.hasLocationPermission
 import kotlinx.coroutines.launch
 
 @SuppressLint("MissingPermission")
 @Composable
-fun MapScreen(viewModel: NotesViewModel, navController: NavController) {
+fun MapScreen(viewModel: NotesViewModel, navController: NavController, mapViewModel: MapViewModel) {
     val notes by viewModel.notes.collectAsState()
     val context = LocalContext.current
 
@@ -92,9 +93,28 @@ fun MapScreen(viewModel: NotesViewModel, navController: NavController) {
     }
     val coroutineScope = rememberCoroutineScope()
 
-    LaunchedEffect(hasForegroundPermission) {
-        if (hasForegroundPermission) {
-            Log.d("MapScreen", "Foreground permission is available, getting last location.")
+    var isMapInitialized by remember { mutableStateOf(false) }
+
+    // --- КЛЮЧОВІ ЗМІНИ ТУТ ---
+
+    // Ефект для навігації до нотатки. Має вищий пріоритет.
+    val cameraTarget by mapViewModel.cameraTarget.collectAsState()
+    LaunchedEffect(cameraTarget) {
+        cameraTarget?.let { latLng ->
+            Log.d("MapScreen", "Navigating to target: $latLng")
+            // Коли ми летимо до нотатки, ми вважаємо карту ініціалізованою
+            isMapInitialized = true
+            cameraPositionState.animate(
+                CameraUpdateFactory.newLatLngZoom(latLng, 15f)
+            )
+            mapViewModel.onNavigationComplete()
+        }
+    }
+
+    // Ефект для центрування на користувачеві. Спрацює, тільки якщо карта ще не ініціалізована.
+    LaunchedEffect(hasForegroundPermission, isMapInitialized) {
+        if (hasForegroundPermission && !isMapInitialized) {
+            Log.d("MapScreen", "Centering on user location for the first time.")
             val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
             fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                 if (location != null) {
@@ -104,6 +124,8 @@ fun MapScreen(viewModel: NotesViewModel, navController: NavController) {
                             CameraUpdateFactory.newLatLngZoom(userLocation, 15f)
                         )
                     }
+                    // Позначаємо, що ми виконали початкове центрування
+                    isMapInitialized = true
                 }
             }
         }

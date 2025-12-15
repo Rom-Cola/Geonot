@@ -124,4 +124,14 @@ class NotesViewModel(private val repository: GeoNoteRepository) : ViewModel() {
         }
         return sortedWeekMap
     }
+
+    fun updateNote(note: GeoNote) {
+        viewModelScope.launch {
+            repository.update(note)
+        }
+    }
+
+    suspend fun getNoteById(id: Int): GeoNote? {
+        return repository.getNoteById(id)
+    }
 }

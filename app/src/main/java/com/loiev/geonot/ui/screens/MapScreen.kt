@@ -2,6 +2,7 @@ package com.loiev.geonot.ui.screens
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,48 +24,54 @@ fun MapScreen(viewModel: NotesViewModel) {
     val notes by viewModel.notes.collectAsState()
     val context = LocalContext.current
 
-    // Стан для відстеження, чи є дозвіл
-    var hasPermission by remember { mutableStateOf(hasLocationPermission(context)) }
+    var hasLocationPermission by remember { mutableStateOf(hasLocationPermission(context)) }
 
-    // Launcher для запиту дозволів. Він оновлює наш стан `hasPermission`.
-    val permissionLauncher = rememberLauncherForActivityResult(
+    // Launcher для запиту дозволів на геолокацію
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
         onResult = { permissions ->
             if (permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false)) {
-                hasPermission = true
+                hasLocationPermission = true
             }
         }
     )
 
-    // Запитуємо дозвіл при першому вході на екран, якщо його немає
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+
+        }
+    )
+
     LaunchedEffect(Unit) {
-        if (!hasPermission) {
-            permissionLauncher.launch(
+        if (!hasLocationPermission) {
+            locationPermissionLauncher.launch(
                 arrayOf(
                     Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.ACCESS_COARSE_LOCATION
                 )
             )
         }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
     }
 
-    // Стан камери. Починаємо з Києва.
+
     val cameraPositionState = rememberCameraPositionState {
+        // Київ як початкова точка за замовчуванням
         position = CameraPosition.fromLatLngZoom(LatLng(50.4501, 30.5234), 10f)
     }
-
-    // Клієнт для отримання геолокації
-    val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     val coroutineScope = rememberCoroutineScope()
 
-    // Цей блок виконається один раз, коли `hasPermission` стане `true`
-    LaunchedEffect(hasPermission) {
-        if (hasPermission) {
+    LaunchedEffect(hasLocationPermission) {
+        if (hasLocationPermission) {
+            val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
             fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                 if (location != null) {
                     val userLocation = LatLng(location.latitude, location.longitude)
-                    // Плавно переміщуємо камеру на позицію користувача
                     coroutineScope.launch {
+                        // Плавно переміщуємо камеру на позицію користувача
                         cameraPositionState.animate(
                             CameraUpdateFactory.newLatLngZoom(userLocation, 15f)
                         )
@@ -74,14 +81,19 @@ fun MapScreen(viewModel: NotesViewModel) {
         }
     }
 
+    LaunchedEffect(notes, hasLocationPermission) {
+        if (hasLocationPermission && notes.isNotEmpty()) {
+            viewModel.registerGeofences(context, notes)
+        }
+    }
+
     GoogleMap(
         modifier = Modifier.fillMaxSize(),
         cameraPositionState = cameraPositionState,
-        // Вмикаємо синю точку та кнопку "Моє місцезнаходження" на карті
-        properties = MapProperties(isMyLocationEnabled = hasPermission),
-        // Вимикаємо стандартну обробку кліків, якщо ми не хочемо, щоб карта реагувала на них
-        uiSettings = MapUiSettings(myLocationButtonEnabled = hasPermission)
+        properties = MapProperties(isMyLocationEnabled = hasLocationPermission),
+        uiSettings = MapUiSettings(myLocationButtonEnabled = hasLocationPermission)
     ) {
+        // Відображаємо маркери для кожної нотатки
         notes.forEach { note ->
             Marker(
                 state = MarkerState(position = LatLng(note.latitude, note.longitude)),

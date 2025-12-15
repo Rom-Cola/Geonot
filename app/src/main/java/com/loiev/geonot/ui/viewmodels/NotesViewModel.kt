@@ -1,9 +1,11 @@
 package com.loiev.geonot.ui.viewmodels
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.loiev.geonot.data.GeoNote
 import com.loiev.geonot.data.GeoNoteRepository
+import com.loiev.geonot.utils.GeofenceHelper
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -20,6 +22,7 @@ class NotesViewModel(private val repository: GeoNoteRepository) : ViewModel() {
             initialValue = emptyList()
         )
 
+
     fun addNote(name: String, text: String, radius: Int) { // <-- Додали параметр radius
         viewModelScope.launch {
             val sdf = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
@@ -35,5 +38,10 @@ class NotesViewModel(private val repository: GeoNoteRepository) : ViewModel() {
             )
             repository.insert(newNote)
         }
+    }
+
+    fun registerGeofences(context: Context, notes: List<GeoNote>) {
+        val geofenceHelper = GeofenceHelper(context)
+        geofenceHelper.addGeofences(notes)
     }
 }

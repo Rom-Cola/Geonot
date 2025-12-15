@@ -4,6 +4,8 @@
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:name=".GeonotApplication"
@@ -16,6 +18,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Geonot">
 
+        <receiver android:name=".GeofenceBroadcastReceiver" android:enabled="true" android:exported="false" />
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyAUyrbgKZbDlWRY3guI-yeJFun8nzinpT0" />

@@ -54,7 +54,7 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
     )
 
     NavHost(navController = navController, startDestination = Screen.Map.route, modifier = modifier) {
-        composable(Screen.Map.route) { MapScreen() }
+        composable(Screen.Map.route) { MapScreen(viewModel = notesViewModel) }
         composable(Screen.NotesList.route) { NotesListScreen(viewModel = notesViewModel) }
         // Передаємо viewModel та navController в екран додавання
         composable(Screen.AddNote.route) { AddNoteScreen(navController = navController, viewModel = notesViewModel) }

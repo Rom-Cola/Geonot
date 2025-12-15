@@ -27,6 +27,7 @@ import com.loiev.geonot.GeonotApplication
 import com.loiev.geonot.ui.screens.AddNoteScreen
 import com.loiev.geonot.ui.screens.MapScreen
 import com.loiev.geonot.ui.screens.NotesListScreen
+import com.loiev.geonot.ui.screens.ProfileScreen
 import com.loiev.geonot.ui.viewmodels.NotesViewModel
 import com.loiev.geonot.ui.viewmodels.ViewModelFactory
 
@@ -88,7 +89,7 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
                 longitude = lng
             )
         }
-        composable(Screen.Profile.route) { PlaceholderScreen("Profile Screen") }
+        composable(Screen.Profile.route) { ProfileScreen(viewModel = notesViewModel) }
     }
 }
 

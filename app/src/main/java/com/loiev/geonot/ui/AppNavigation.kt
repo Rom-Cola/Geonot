@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -23,13 +23,14 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.loiev.geonot.GeonotApplication
 import com.loiev.geonot.ui.screens.AddNoteScreen
+import com.loiev.geonot.ui.screens.MapScreen
 import com.loiev.geonot.ui.screens.NotesListScreen
 import com.loiev.geonot.ui.viewmodels.NotesViewModel
 import com.loiev.geonot.ui.viewmodels.ViewModelFactory
 
 sealed class Screen(val route: String, val icon: ImageVector, val title: String) {
     object Map : Screen("map", Icons.Default.Home, "Map")
-    object NotesList : Screen("notes_list", Icons.Default.List, "Markers")
+    object NotesList : Screen("notes_list", Icons.AutoMirrored.Filled.List, "Markers")
     object AddNote : Screen("add_note", Icons.Default.Add, "Add")
     object Profile : Screen("profile", Icons.Default.Person, "Profile")
 }
@@ -53,7 +54,7 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
     )
 
     NavHost(navController = navController, startDestination = Screen.Map.route, modifier = modifier) {
-        composable(Screen.Map.route) { PlaceholderScreen("Map Screen") }
+        composable(Screen.Map.route) { MapScreen() }
         composable(Screen.NotesList.route) { NotesListScreen(viewModel = notesViewModel) }
         // Передаємо viewModel та navController в екран додавання
         composable(Screen.AddNote.route) { AddNoteScreen(navController = navController, viewModel = notesViewModel) }

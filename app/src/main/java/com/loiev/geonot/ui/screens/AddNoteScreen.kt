@@ -21,7 +21,6 @@ fun AddNoteScreen(
     latitude: Double,
     longitude: Double
 ) {
-    // Стан для кожного поля вводу
     var name by remember { mutableStateOf("") }
     var text by remember { mutableStateOf("") }
     var radius by remember { mutableStateOf(50f) } // Float для Slider
@@ -70,7 +69,6 @@ fun AddNoteScreen(
             )
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Секція для радіусу
             Text("Radius", color = MaterialTheme.colorScheme.primary, fontSize = 14.sp)
             Spacer(modifier = Modifier.height(8.dp))
             Row(

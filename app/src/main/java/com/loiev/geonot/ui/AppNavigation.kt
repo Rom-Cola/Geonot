@@ -1,5 +1,6 @@
 package com.loiev.geonot.ui
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -11,6 +12,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -24,6 +26,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.google.android.gms.location.LocationServices
 import com.loiev.geonot.GeonotApplication
 import com.loiev.geonot.ui.screens.AddNoteScreen
 import com.loiev.geonot.ui.screens.EditNoteScreen
@@ -48,12 +51,34 @@ sealed class Screen(val route: String, val icon: ImageVector, val title: String)
     object Profile : Screen("profile", Icons.Default.Person, "Profile")
 }
 
+@SuppressLint("MissingPermission")
 @Composable
 fun MainScreen() {
     val navController = rememberNavController()
     val screens = listOf(Screen.Map, Screen.NotesList, Screen.AddNote, Screen.Profile)
 
-    Scaffold(bottomBar = { BottomNavigationBar(navController = navController, items = screens) }) { innerPadding ->
+    val context = LocalContext.current
+
+    val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+
+    Scaffold(
+        bottomBar = {
+            BottomNavigationBar(
+                navController = navController,
+                items = screens,
+                onAddClick = {
+                    fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                        if (location != null) {
+                            navController.navigate(
+                                Screen.AddNote.createRoute(location.latitude, location.longitude)
+                            )
+                        } else {
+                        }
+                    }
+                }
+            )
+        }
+    ) { innerPadding ->
         AppNavHost(navController = navController, modifier = Modifier.padding(innerPadding))
     }
 }
@@ -117,7 +142,7 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
 }
 
 @Composable
-fun BottomNavigationBar(navController: NavController, items: List<Screen>) {
+fun BottomNavigationBar(navController: NavController, items: List<Screen>, onAddClick: () -> Unit) {
     NavigationBar {
         val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
         items.forEach { screen ->
@@ -126,10 +151,14 @@ fun BottomNavigationBar(navController: NavController, items: List<Screen>) {
                 label = { Text(screen.title) },
                 selected = currentRoute == screen.route,
                 onClick = {
-                    navController.navigate(screen.route) {
-                        popUpTo(navController.graph.startDestinationId) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
+                    if (screen.route == Screen.AddNote.route) {
+                        onAddClick()
+                    } else {
+                        navController.navigate(screen.route) {
+                            popUpTo(navController.graph.startDestinationId) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
                 }
             )

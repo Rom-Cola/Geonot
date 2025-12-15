@@ -30,8 +30,6 @@ fun MapScreen(viewModel: NotesViewModel, navController: NavController, mapViewMo
     val notes by viewModel.notes.collectAsState()
     val context = LocalContext.current
 
-    // --- 1. СТАН ТА ЗАПИТ ДОЗВОЛІВ ---
-
     var hasForegroundPermission by remember { mutableStateOf(hasLocationPermission(context)) }
     var hasBackgroundPermission by remember {
         val initialValue = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -87,7 +85,6 @@ fun MapScreen(viewModel: NotesViewModel, navController: NavController, mapViewMo
         }
     }
 
-    // --- 2. НАЛАШТУВАННЯ КАРТИ ТА ГЕОЛОКАЦІЇ ---
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(LatLng(50.4501, 30.5234), 10f)
     }
@@ -95,14 +92,11 @@ fun MapScreen(viewModel: NotesViewModel, navController: NavController, mapViewMo
 
     var isMapInitialized by remember { mutableStateOf(false) }
 
-    // --- КЛЮЧОВІ ЗМІНИ ТУТ ---
 
-    // Ефект для навігації до нотатки. Має вищий пріоритет.
     val cameraTarget by mapViewModel.cameraTarget.collectAsState()
     LaunchedEffect(cameraTarget) {
         cameraTarget?.let { latLng ->
             Log.d("MapScreen", "Navigating to target: $latLng")
-            // Коли ми летимо до нотатки, ми вважаємо карту ініціалізованою
             isMapInitialized = true
             cameraPositionState.animate(
                 CameraUpdateFactory.newLatLngZoom(latLng, 15f)
@@ -111,7 +105,6 @@ fun MapScreen(viewModel: NotesViewModel, navController: NavController, mapViewMo
         }
     }
 
-    // Ефект для центрування на користувачеві. Спрацює, тільки якщо карта ще не ініціалізована.
     LaunchedEffect(hasForegroundPermission, isMapInitialized) {
         if (hasForegroundPermission && !isMapInitialized) {
             Log.d("MapScreen", "Centering on user location for the first time.")
@@ -124,14 +117,12 @@ fun MapScreen(viewModel: NotesViewModel, navController: NavController, mapViewMo
                             CameraUpdateFactory.newLatLngZoom(userLocation, 15f)
                         )
                     }
-                    // Позначаємо, що ми виконали початкове центрування
                     isMapInitialized = true
                 }
             }
         }
     }
 
-    // --- 3. РЕЄСТРАЦІЯ ГЕОЗОН ---
     LaunchedEffect(notes, hasBackgroundPermission) {
         Log.d("MapScreen", "Geofence registration effect triggered. Notes count: ${notes.size}, Background permission: $hasBackgroundPermission")
         if (hasBackgroundPermission && notes.isNotEmpty()) {
@@ -140,7 +131,6 @@ fun MapScreen(viewModel: NotesViewModel, navController: NavController, mapViewMo
         }
     }
 
-    // --- 4. ВІДОБРАЖЕННЯ КАРТИ ТА МАРКЕРІВ ---
     GoogleMap(
         modifier = Modifier.fillMaxSize(),
         cameraPositionState = cameraPositionState,

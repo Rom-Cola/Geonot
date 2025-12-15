@@ -33,16 +33,13 @@ fun NotesListScreen(viewModel: NotesViewModel, navController: NavController, map
                 Box(
                     modifier = Modifier.combinedClickable(
                         onClick = {
-                            // Просимо MapViewModel перемістити камеру
                             mapViewModel.navigateTo(LatLng(note.latitude, note.longitude))
-                            // Переходимо на екран карти
                             navController.navigate(Screen.Map.route) {
                                 popUpTo(navController.graph.startDestinationId)
                                 launchSingleTop = true
                             }
                         },
                         onLongClick = {
-                            // Переходимо на екран редагування
                             navController.navigate(Screen.EditNote.createRoute(note.id))
                         }
                     )

@@ -21,11 +21,9 @@ fun EditNoteScreen(
     navController: NavController,
     viewModel: NotesViewModel
 ) {
-    // Стан для зберігання завантаженої нотатки
     var note by remember { mutableStateOf<GeoNote?>(null) }
     val coroutineScope = rememberCoroutineScope()
 
-    // Завантажуємо дані нотатки один раз при першому запуску екрану
     LaunchedEffect(noteId) {
         coroutineScope.launch {
             note = viewModel.getNoteById(noteId)
@@ -33,8 +31,6 @@ fun EditNoteScreen(
         }
     }
 
-    // Стани для полів вводу.
-    // `remember(note)` гарантує, що вони оновляться, коли `note` завантажиться.
     var name by remember(note) { mutableStateOf(note?.name ?: "") }
     var text by remember(note) { mutableStateOf(note?.text ?: "") }
     var radius by remember(note) { mutableStateOf(note?.radius?.toFloat() ?: 50f) }
@@ -43,11 +39,9 @@ fun EditNoteScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Edit Marker", fontWeight = FontWeight.Bold) }
-                // Можна додати кнопку "Назад", якщо потрібно
             )
         }
     ) { paddingValues ->
-        // Показуємо індикатор завантаження, поки дані нотатки не отримано
         if (note == null) {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -56,14 +50,12 @@ fun EditNoteScreen(
                 CircularProgressIndicator()
             }
         } else {
-            // Коли дані завантажено, показуємо основний контент
             Column(
                 modifier = Modifier
                     .padding(paddingValues)
                     .padding(16.dp)
                     .fillMaxSize()
             ) {
-                // Поле для назви
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -72,7 +64,6 @@ fun EditNoteScreen(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Поле для тексту
                 OutlinedTextField(
                     value = text,
                     onValueChange = { text = it },
@@ -83,7 +74,6 @@ fun EditNoteScreen(
                 )
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Секція для радіусу
                 Text("Radius", color = MaterialTheme.colorScheme.primary, fontSize = 14.sp)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -104,7 +94,6 @@ fun EditNoteScreen(
 
                 Spacer(modifier = Modifier.weight(1f)) // "Притискає" кнопки до низу
 
-                // Кнопки "Back" та "Save"
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -118,14 +107,13 @@ fun EditNoteScreen(
                     Spacer(modifier = Modifier.width(16.dp))
                     Button(
                         onClick = {
-                            // Створюємо оновлений об'єкт і зберігаємо його
                             val updatedNote = note!!.copy(
                                 name = name,
                                 text = text,
                                 radius = radius.toInt()
                             )
                             viewModel.updateNote(updatedNote)
-                            navController.popBackStack() // Повертаємось на попередній екран
+                            navController.popBackStack()
                         },
                         modifier = Modifier.weight(1f)
                     ) {

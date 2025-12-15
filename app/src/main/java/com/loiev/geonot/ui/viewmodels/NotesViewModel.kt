@@ -40,6 +40,23 @@ class NotesViewModel(private val repository: GeoNoteRepository) : ViewModel() {
         }
     }
 
+    fun addNote(name: String, text: String, radius: Int, latitude: Double, longitude: Double) {
+        viewModelScope.launch {
+            val sdf = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
+            val currentDate = sdf.format(Date())
+
+            val newNote = GeoNote(
+                name = name,
+                text = text,
+                radius = radius,
+                latitude = latitude,
+                longitude = longitude,
+                timestamp = currentDate
+            )
+            repository.insert(newNote)
+        }
+    }
+
     fun registerGeofences(context: Context, notes: List<GeoNote>) {
         val geofenceHelper = GeofenceHelper(context)
         geofenceHelper.addGeofences(notes)

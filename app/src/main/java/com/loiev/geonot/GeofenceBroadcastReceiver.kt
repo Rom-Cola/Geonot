@@ -28,6 +28,8 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
                 val application = context.applicationContext as GeonotApplication
                 findNoteAndShowNotification(application.repository, geofenceId, context)
             }
+        } else if (geofencingEvent.geofenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT) {
+            Log.i("GeofenceReceiver", "Geofence Exited!")
         }
     }
 

@@ -1,8 +1,18 @@
+import java.io.FileInputStream
+import java.util.Properties
+
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(FileInputStream(localPropertiesFile))
+}
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp")
     id("org.jetbrains.kotlin.plugin.compose")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -20,6 +30,8 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        manifestPlaceholders["MAPS_API_KEY"] = localProperties.getProperty("MAPS_API_KEY") ?: "NO_KEY"
     }
 
     buildTypes {
@@ -46,6 +58,11 @@ android {
 }
 
 dependencies {
+    // --- Firebase ---
+    implementation(platform("com.google.firebase:firebase-bom:33.1.0"))
+    implementation("com.google.firebase:firebase-auth-ktx") // Firebase Authentication
+    implementation("com.google.android.gms:play-services-auth:21.2.0") // Google Sign-In client
+
     // --- Room Database ---
     val room_version = "2.6.1"
     implementation("androidx.room:room-runtime:$room_version")

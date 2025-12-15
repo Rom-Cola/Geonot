@@ -15,4 +15,12 @@ class GeoNoteRepository(private val geoNoteDao: GeoNoteDao) {
     suspend fun getNotesForStats(): List<GeoNote> {
         return geoNoteDao.getAllNotesList()
     }
+
+    suspend fun update(note: GeoNote) {
+        geoNoteDao.update(note)
+    }
+
+    suspend fun getNoteById(id: Int): GeoNote? {
+        return geoNoteDao.getNoteById(id)
+    }
 }

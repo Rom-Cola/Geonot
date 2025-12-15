@@ -1,6 +1,10 @@
 package com.loiev.geonot.ui.viewmodels
 
+import android.app.Application
 import android.content.Context
+import android.net.Uri
+import android.util.Log
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.loiev.geonot.data.GeoNote
@@ -13,12 +17,15 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.io.File
+import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import java.util.UUID
 
-class NotesViewModel(private val repository: GeoNoteRepository) : ViewModel() {
+class NotesViewModel(private val repository: GeoNoteRepository, application: Application) : AndroidViewModel(application) {
     val notes: StateFlow<List<GeoNote>> = repository.allNotes
         .stateIn(
             scope = viewModelScope,
@@ -26,19 +33,31 @@ class NotesViewModel(private val repository: GeoNoteRepository) : ViewModel() {
             initialValue = emptyList()
         )
 
+    private fun saveImageToInternalStorage(uri: Uri): String? {
+        val context = getApplication<Application>().applicationContext
+        try {
+            val inputStream = context.contentResolver.openInputStream(uri) ?: return null
+            val file = File(context.cacheDir, "images/${UUID.randomUUID()}.jpg")
+            file.parentFile?.mkdirs()
+            val outputStream = FileOutputStream(file)
+            inputStream.copyTo(outputStream)
+            inputStream.close()
+            outputStream.close()
+            return file.absolutePath
+        } catch (e: Exception) {
+            Log.e("NotesViewModel", "Failed to save image", e)
+            return null
+        }
+    }
 
-    fun addNote(name: String, text: String, radius: Int) {
+
+    fun addNote(name: String, text: String, radius: Int, latitude: Double, longitude: Double, imageUri: Uri?) {
         viewModelScope.launch {
-            val sdf = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
-            val currentDate = sdf.format(Date())
-
+            val imagePath = imageUri?.let { saveImageToInternalStorage(it) }
             val newNote = GeoNote(
-                name = name,
-                text = text,
-                radius = radius,
-                latitude = 50.4501,
-                longitude = 30.5234,
-                timestamp = currentDate
+                name = name, text = text, radius = radius, latitude = latitude,
+                longitude = longitude, timestamp = Date().toString(),
+                photoPath = imagePath
             )
             repository.insert(newNote)
         }
@@ -123,5 +142,18 @@ class NotesViewModel(private val repository: GeoNoteRepository) : ViewModel() {
             }
         }
         return sortedWeekMap
+    }
+
+    fun updateNote(note: GeoNote, newImageUri: Uri?) {
+        viewModelScope.launch {
+            val imagePath = newImageUri?.let { saveImageToInternalStorage(it) }
+            // Якщо нове зображення, використовуємо новий шлях, інакше залишаємо старий
+            val updatedNote = note.copy(photoPath = imagePath ?: note.photoPath)
+            repository.update(updatedNote)
+        }
+    }
+
+    suspend fun getNoteById(id: Int): GeoNote? {
+        return repository.getNoteById(id)
     }
 }

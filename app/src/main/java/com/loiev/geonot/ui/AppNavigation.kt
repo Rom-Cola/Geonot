@@ -1,5 +1,7 @@
 package com.loiev.geonot.ui
 
+import android.annotation.SuppressLint
+import android.app.Application
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -7,9 +9,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -23,12 +27,15 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.google.android.gms.location.LocationServices
 import com.loiev.geonot.GeonotApplication
 import com.loiev.geonot.ui.screens.AddNoteScreen
+import com.loiev.geonot.ui.screens.EditNoteScreen
 import com.loiev.geonot.ui.screens.MapScreen
 import com.loiev.geonot.ui.screens.NotesListScreen
 import com.loiev.geonot.ui.screens.ProfileScreen
 import com.loiev.geonot.ui.viewmodels.AuthViewModel
+import com.loiev.geonot.ui.viewmodels.MapViewModel
 import com.loiev.geonot.ui.viewmodels.NotesViewModel
 import com.loiev.geonot.ui.viewmodels.ViewModelFactory
 
@@ -38,15 +45,41 @@ sealed class Screen(val route: String, val icon: ImageVector, val title: String)
     object AddNote : Screen("add_note?lat={lat}&lng={lng}", Icons.Default.Add, "Add") {
         fun createRoute(lat: Double, lng: Double) = "add_note?lat=$lat&lng=$lng"
     }
+
+    object EditNote : Screen("edit_note/{noteId}", Icons.Default.Edit, "Edit") {
+        fun createRoute(noteId: Int) = "edit_note/$noteId"
+    }
     object Profile : Screen("profile", Icons.Default.Person, "Profile")
 }
 
+@SuppressLint("MissingPermission")
 @Composable
 fun MainScreen() {
     val navController = rememberNavController()
     val screens = listOf(Screen.Map, Screen.NotesList, Screen.AddNote, Screen.Profile)
 
-    Scaffold(bottomBar = { BottomNavigationBar(navController = navController, items = screens) }) { innerPadding ->
+    val context = LocalContext.current
+
+    val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+
+    Scaffold(
+        bottomBar = {
+            BottomNavigationBar(
+                navController = navController,
+                items = screens,
+                onAddClick = {
+                    fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                        if (location != null) {
+                            navController.navigate(
+                                Screen.AddNote.createRoute(location.latitude, location.longitude)
+                            )
+                        } else {
+                        }
+                    }
+                }
+            )
+        }
+    ) { innerPadding ->
         AppNavHost(navController = navController, modifier = Modifier.padding(innerPadding))
     }
 }
@@ -55,14 +88,17 @@ fun MainScreen() {
 fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) {
     val application = LocalContext.current.applicationContext as GeonotApplication
     val notesViewModel: NotesViewModel = viewModel(
-        factory = ViewModelFactory(application.repository)
+        factory = ViewModelFactory(application.repository, application as Application)
     )
     val authViewModel: AuthViewModel = viewModel()
+
+    val mapViewModel: MapViewModel = viewModel()
+
     NavHost(navController = navController, startDestination = Screen.Map.route, modifier = modifier) {
         composable(Screen.Map.route) {
-            MapScreen(viewModel = notesViewModel, navController = navController)
+            MapScreen(viewModel = notesViewModel, navController = navController, mapViewModel = mapViewModel)
         }
-        composable(Screen.NotesList.route) { NotesListScreen(viewModel = notesViewModel) }
+        composable(Screen.NotesList.route) { NotesListScreen(viewModel = notesViewModel, navController = navController, mapViewModel = mapViewModel) }
         composable(
             route = Screen.AddNote.route,
             arguments = listOf(
@@ -86,6 +122,17 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
                 longitude = lng
             )
         }
+        composable(
+            route = Screen.EditNote.route,
+            arguments = listOf(navArgument("noteId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val noteId = backStackEntry.arguments?.getInt("noteId") ?: -1
+            EditNoteScreen(
+                noteId = noteId,
+                navController = navController,
+                viewModel = notesViewModel
+            )
+        }
         composable(Screen.Profile.route) {
             ProfileScreen(
                 notesViewModel = notesViewModel,
@@ -96,7 +143,7 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
 }
 
 @Composable
-fun BottomNavigationBar(navController: NavController, items: List<Screen>) {
+fun BottomNavigationBar(navController: NavController, items: List<Screen>, onAddClick: () -> Unit) {
     NavigationBar {
         val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
         items.forEach { screen ->
@@ -105,10 +152,14 @@ fun BottomNavigationBar(navController: NavController, items: List<Screen>) {
                 label = { Text(screen.title) },
                 selected = currentRoute == screen.route,
                 onClick = {
-                    navController.navigate(screen.route) {
-                        popUpTo(navController.graph.startDestinationId) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
+                    if (screen.route == Screen.AddNote.route) {
+                        onAddClick()
+                    } else {
+                        navController.navigate(screen.route) {
+                            popUpTo(navController.graph.startDestinationId) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
                 }
             )

@@ -19,17 +19,16 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
 import com.loiev.geonot.ui.Screen
+import com.loiev.geonot.ui.viewmodels.MapViewModel
 import com.loiev.geonot.ui.viewmodels.NotesViewModel
 import com.loiev.geonot.utils.hasLocationPermission
 import kotlinx.coroutines.launch
 
 @SuppressLint("MissingPermission")
 @Composable
-fun MapScreen(viewModel: NotesViewModel, navController: NavController) {
+fun MapScreen(viewModel: NotesViewModel, navController: NavController, mapViewModel: MapViewModel) {
     val notes by viewModel.notes.collectAsState()
     val context = LocalContext.current
-
-    // --- 1. СТАН ТА ЗАПИТ ДОЗВОЛІВ ---
 
     var hasForegroundPermission by remember { mutableStateOf(hasLocationPermission(context)) }
     var hasBackgroundPermission by remember {
@@ -86,15 +85,29 @@ fun MapScreen(viewModel: NotesViewModel, navController: NavController) {
         }
     }
 
-    // --- 2. НАЛАШТУВАННЯ КАРТИ ТА ГЕОЛОКАЦІЇ ---
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(LatLng(50.4501, 30.5234), 10f)
     }
     val coroutineScope = rememberCoroutineScope()
 
-    LaunchedEffect(hasForegroundPermission) {
-        if (hasForegroundPermission) {
-            Log.d("MapScreen", "Foreground permission is available, getting last location.")
+    var isMapInitialized by remember { mutableStateOf(false) }
+
+
+    val cameraTarget by mapViewModel.cameraTarget.collectAsState()
+    LaunchedEffect(cameraTarget) {
+        cameraTarget?.let { latLng ->
+            Log.d("MapScreen", "Navigating to target: $latLng")
+            isMapInitialized = true
+            cameraPositionState.animate(
+                CameraUpdateFactory.newLatLngZoom(latLng, 15f)
+            )
+            mapViewModel.onNavigationComplete()
+        }
+    }
+
+    LaunchedEffect(hasForegroundPermission, isMapInitialized) {
+        if (hasForegroundPermission && !isMapInitialized) {
+            Log.d("MapScreen", "Centering on user location for the first time.")
             val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
             fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                 if (location != null) {
@@ -104,12 +117,12 @@ fun MapScreen(viewModel: NotesViewModel, navController: NavController) {
                             CameraUpdateFactory.newLatLngZoom(userLocation, 15f)
                         )
                     }
+                    isMapInitialized = true
                 }
             }
         }
     }
 
-    // --- 3. РЕЄСТРАЦІЯ ГЕОЗОН ---
     LaunchedEffect(notes, hasBackgroundPermission) {
         Log.d("MapScreen", "Geofence registration effect triggered. Notes count: ${notes.size}, Background permission: $hasBackgroundPermission")
         if (hasBackgroundPermission && notes.isNotEmpty()) {
@@ -118,7 +131,6 @@ fun MapScreen(viewModel: NotesViewModel, navController: NavController) {
         }
     }
 
-    // --- 4. ВІДОБРАЖЕННЯ КАРТИ ТА МАРКЕРІВ ---
     GoogleMap(
         modifier = Modifier.fillMaxSize(),
         cameraPositionState = cameraPositionState,

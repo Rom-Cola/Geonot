@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -19,4 +20,10 @@ interface GeoNoteDao {
 
     @Query("SELECT * FROM notes_table ORDER BY timestamp DESC")
     fun getAllNotesList(): List<GeoNote>
+
+    @Update
+    suspend fun update(note: GeoNote)
+
+    @Query("SELECT * FROM notes_table WHERE id = :id")
+    suspend fun getNoteById(id: Int): GeoNote?
 }

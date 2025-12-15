@@ -1,6 +1,7 @@
 package com.loiev.geonot.ui
 
 import android.annotation.SuppressLint
+import android.app.Application
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -87,7 +88,7 @@ fun MainScreen() {
 fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) {
     val application = LocalContext.current.applicationContext as GeonotApplication
     val notesViewModel: NotesViewModel = viewModel(
-        factory = ViewModelFactory(application.repository)
+        factory = ViewModelFactory(application.repository, application as Application)
     )
     val authViewModel: AuthViewModel = viewModel()
 

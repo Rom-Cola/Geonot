@@ -15,7 +15,12 @@ import com.loiev.geonot.ui.viewmodels.NotesViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddNoteScreen(navController: NavController, viewModel: NotesViewModel) {
+fun AddNoteScreen(
+    navController: NavController,
+    viewModel: NotesViewModel,
+    latitude: Double,
+    longitude: Double
+) {
     // Стан для кожного поля вводу
     var name by remember { mutableStateOf("") }
     var text by remember { mutableStateOf("") }
@@ -102,10 +107,9 @@ fun AddNoteScreen(navController: NavController, viewModel: NotesViewModel) {
                 Spacer(modifier = Modifier.width(16.dp))
                 Button(
                     onClick = {
-                        // Перевірка, щоб назва не була пустою
                         if (name.isNotBlank()) {
-                            viewModel.addNote(name, text, radius.toInt())
-                            navController.popBackStack() // Повертаємось на попередній екран
+                            viewModel.addNote(name, text, radius.toInt(), latitude, longitude)
+                            navController.popBackStack()
                         }
                     },
                     modifier = Modifier.weight(1f)

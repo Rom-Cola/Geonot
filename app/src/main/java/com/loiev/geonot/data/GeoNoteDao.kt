@@ -13,4 +13,10 @@ interface GeoNoteDao {
 
     @Query("SELECT * FROM notes_table ORDER BY id DESC")
     fun getAllNotes(): Flow<List<GeoNote>>
+
+    @Query("SELECT COUNT(*) FROM notes_table")
+    fun getTotalNotesCount(): Flow<Int>
+
+    @Query("SELECT * FROM notes_table ORDER BY timestamp DESC")
+    fun getAllNotesList(): List<GeoNote>
 }

@@ -18,7 +18,9 @@ import androidx.core.net.toUri
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.loiev.geonot.data.GeoNote
+import com.loiev.geonot.data.ShareableNote
 import com.loiev.geonot.ui.components.ImagePicker
+import com.loiev.geonot.ui.components.QrCodeDialog
 import com.loiev.geonot.ui.viewmodels.NotesViewModel
 import kotlinx.coroutines.launch
 import java.io.File
@@ -50,6 +52,19 @@ fun EditNoteScreen(
     var name by remember(note) { mutableStateOf(note?.name ?: "") }
     var text by remember(note) { mutableStateOf(note?.text ?: "") }
     var radius by remember(note) { mutableStateOf(note?.radius?.toFloat() ?: 50f) }
+
+    var showQrDialog by remember { mutableStateOf(false) }
+
+    if (showQrDialog && note != null) {
+        val shareableNote = ShareableNote(
+            name = note!!.name,
+            text = note!!.text,
+            latitude = note!!.latitude,
+            longitude = note!!.longitude,
+            radius = note!!.radius
+        )
+        QrCodeDialog(note = shareableNote, onDismiss = { showQrDialog = false })
+    }
 
     Scaffold(
         topBar = {
@@ -121,6 +136,13 @@ fun EditNoteScreen(
                         modifier = Modifier.padding(start = 16.dp),
                         fontSize = 16.sp
                     )
+                }
+
+                Button(
+                    onClick = { showQrDialog = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Share with QR Code")
                 }
 
                 Spacer(modifier = Modifier.weight(1f))

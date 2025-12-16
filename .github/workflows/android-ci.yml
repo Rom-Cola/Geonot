@@ -1,31 +1,28 @@
-# Назва нашого робочого процесу, яка буде відображатися в GitHub
 name: Android CI
 
-# Тригери: коли запускати цей процес
 on:
-  # Запускати при push-і в гілки 'master' та 'dev'
   push:
     branches: [ "master", "dev" ]
-  # Запускати при створенні Pull Request-а на ці гілки
   pull_request:
     branches: [ "master", "dev" ]
 
-# Завдання (jobs), які потрібно виконати
 jobs:
-  # Назва завдання (може бути будь-якою)
   build-and-test:
-    # На якій операційній системі запускати (використовуємо останню версію Ubuntu)
     runs-on: ubuntu-latest
 
-    # Кроки (steps), які будуть виконуватися послідовно
     steps:
-      # Крок 1: Клонування репозиторію
-      # `uses` вказує на готовий екшен від спільноти
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Крок 2: Налаштування Java
-      # Нам потрібна JDK 11 (або 17), як ми вказали в build.gradle.kts
+      # Створюємо необхідні секретні файли
+      - name: Create secret files
+        run: |
+          # 1. Створюємо google-services.json
+          echo "${{ secrets.GOOGLE_SERVICES_JSON }}" > app/google-services.json
+
+          # 2. Створюємо local.properties ТІЛЬКИ з ключем для карти
+          echo "MAPS_API_KEY=${{ secrets.MAPS_API_KEY }}" > local.properties
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -33,16 +30,13 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      # Крок 3: Надання дозволу на виконання для gradlew
-      # Це необхідно для Linux-середовища
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      # Крок 4: Збірка проєкту
-      # `run` виконує команду в терміналі
-      - name: Build with Gradle
-        run: ./gradlew build
+      # Збираємо debug-версію, оскільки релізну ми не налаштовували
+      - name: Build debug version
+        run: ./gradlew assembleDebug
 
-      # Крок 5: Запуск Unit-тестів
-      - name: Run unit tests with Gradle
-        run: ./gradlew test
+      # Запускаємо Unit-тести для debug-версії
+      - name: Run unit tests
+        run: ./gradlew testDebugUnitTest

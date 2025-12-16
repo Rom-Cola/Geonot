@@ -6,7 +6,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -27,7 +31,13 @@ import com.loiev.geonot.ui.viewmodels.NotesViewModel
 fun NotesListScreen(viewModel: NotesViewModel, navController: NavController, mapViewModel: MapViewModel) {
     val notes by viewModel.notes.collectAsState()
 
-    Scaffold(topBar = { TopAppBar(title = { Text("All Markers") }) }) { paddingValues ->
+    Scaffold(topBar = {
+        TopAppBar(title = { Text("All Markers") }) },
+        floatingActionButton = {
+        FloatingActionButton(onClick = { navController.navigate(Screen.QrScanner.route) }) {
+            Icon(Icons.Default.QrCodeScanner, contentDescription = "Scan QR Code")
+        }
+    }) { paddingValues ->
         LazyColumn(modifier = Modifier.padding(paddingValues)) {
             items(notes) { note ->
                 Box(

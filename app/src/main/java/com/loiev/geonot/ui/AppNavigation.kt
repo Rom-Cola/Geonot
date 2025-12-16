@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -34,6 +35,7 @@ import com.loiev.geonot.ui.screens.EditNoteScreen
 import com.loiev.geonot.ui.screens.MapScreen
 import com.loiev.geonot.ui.screens.NotesListScreen
 import com.loiev.geonot.ui.screens.ProfileScreen
+import com.loiev.geonot.ui.screens.QrScannerScreen
 import com.loiev.geonot.ui.viewmodels.AuthViewModel
 import com.loiev.geonot.ui.viewmodels.MapViewModel
 import com.loiev.geonot.ui.viewmodels.NotesViewModel
@@ -49,6 +51,7 @@ sealed class Screen(val route: String, val icon: ImageVector, val title: String)
     object EditNote : Screen("edit_note/{noteId}", Icons.Default.Edit, "Edit") {
         fun createRoute(noteId: Int) = "edit_note/$noteId"
     }
+    object QrScanner : Screen("qr_scanner", Icons.Default.QrCodeScanner, "Scan")
     object Profile : Screen("profile", Icons.Default.Person, "Profile")
 }
 
@@ -138,6 +141,9 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
                 notesViewModel = notesViewModel,
                 authViewModel = authViewModel
             )
+        }
+        composable(Screen.QrScanner.route) {
+            QrScannerScreen(navController = navController, viewModel = notesViewModel)
         }
     }
 }

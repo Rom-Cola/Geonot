@@ -108,9 +108,9 @@ class NotesViewModel(private val repository: GeoNoteRepository, application: App
         }
     }
 
-    private fun processNotesForStats(notes: List<GeoNote>): Map<String, Int> {
+    fun processNotesForStats(notes: List<GeoNote>): Map<String, Int> {
         val calendar = Calendar.getInstance()
-        val dayFormat = SimpleDateFormat("EEE", Locale.getDefault()) // "Пн", "Вт", ...
+        val dayFormat = SimpleDateFormat("EEE", Locale.getDefault())
         val weekMap = mutableMapOf<String, Int>()
 
         for (i in 0..6) {
@@ -147,7 +147,6 @@ class NotesViewModel(private val repository: GeoNoteRepository, application: App
     fun updateNote(note: GeoNote, newImageUri: Uri?) {
         viewModelScope.launch {
             val imagePath = newImageUri?.let { saveImageToInternalStorage(it) }
-            // Якщо нове зображення, використовуємо новий шлях, інакше залишаємо старий
             val updatedNote = note.copy(photoPath = imagePath ?: note.photoPath)
             repository.update(updatedNote)
         }

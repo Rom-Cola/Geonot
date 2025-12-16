@@ -13,6 +13,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.loiev.geonot.ui.MainScreen
 import com.loiev.geonot.ui.screens.LoginScreen
 import com.loiev.geonot.ui.theme.GeonotTheme
@@ -24,6 +25,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        installSplashScreen()
         setContent {
             GeonotTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {

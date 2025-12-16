@@ -62,7 +62,9 @@ dependencies {
     // --- Firebase ---
     implementation(platform("com.google.firebase:firebase-bom:33.1.0"))
     implementation("com.google.firebase:firebase-auth-ktx") // Firebase Authentication
-    implementation("com.google.android.gms:play-services-auth:21.2.0") // Google Sign-In client
+    implementation("com.google.android.gms:play-services-auth:21.2.0")
+    implementation(libs.core.ktx)
+    implementation(libs.androidx.junit.ktx) // Google Sign-In client
 
     // --- Room Database ---
     val room_version = "2.6.1"
@@ -100,6 +102,24 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+    /// --- Unit Testing (src/test) ---
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("com.google.truth:truth:1.4.5")
+    testImplementation("io.mockk:mockk:1.14.7")
+    testImplementation("io.mockk:mockk-agent-jvm:1.14.7")
+
+    // --- Android Testing (src/androidTest) ---
+    androidTestImplementation(libs.ext.junit.v115)
+    androidTestImplementation(libs.espresso.core.v351)
+
+    androidTestImplementation(libs.androidx.compose.compose.bom.v20240500)
+    androidTestImplementation(libs.ui.test.junit4)
+
+    // Також потрібні для роботи debug-інструментів Compose
+    debugImplementation(libs.ui.tooling)
+    debugImplementation(libs.ui.test.manifest)
+
+    implementation("androidx.core:core-splashscreen:1.0.1")
 
     // ML Kit Barcode Scanning
     implementation("com.google.mlkit:barcode-scanning:17.2.0")

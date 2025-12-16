@@ -2,4 +2,16 @@
 <resources>
 
     <style name="Theme.Geonot" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/dark_purple</item>
+
+        <!-- Тепер ми посилаємося на наш новий, простий векторний ассет -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_logo_splash</item>
+
+        <item name="postSplashScreenTheme">@style/Theme.Geonot</item>
+    </style>
+
+
+    <color name="dark_purple">#FF1A0A2E</color>
+
 </resources>

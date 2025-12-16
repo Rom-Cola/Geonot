@@ -26,10 +26,10 @@ jobs:
 
       # Крок 2: Налаштування Java
       # Нам потрібна JDK 11 (або 17), як ми вказали в build.gradle.kts
-      - name: Set up JDK 11
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          java-version: '11'
+          java-version: '17'
           distribution: 'temurin'
           cache: gradle
 
